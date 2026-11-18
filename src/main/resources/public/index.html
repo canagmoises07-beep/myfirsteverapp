@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Secret Santa & Exchange Gift</title>
+    <style>
+        :root {
+            --bg-dark: #060913;
+            --card-bg: rgba(17, 24, 39, 0.85);
+            --gold: #fbbf24;
+            --gold-glow: rgba(251, 191, 36, 0.35);
+            --crimson: #e11d48;
+            --emerald: #10b981;
+            --border: rgba(255, 255, 255, 0.12);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: radial-gradient(ellipse at top, #1e1035 0%, #090d1a 55%, #04060c 100%);
+            color: #f8fafc;
+            margin: 0;
+            padding: 20px 14px 50px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        #snowCanvas, #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        #confettiCanvas { z-index: 99; }
+
+        .wrapper {
+            position: relative;
+            z-index: 10;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 18px 10px 22px;
+        }
+        .badge-top {
+            display: inline-block;
+            background: rgba(251, 191, 36, 0.12);
+            border: 1px solid rgba(251, 191, 36, 0.4);
+            color: var(--gold);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            border-radius: 999px;
+            margin-bottom: 10px;
+        }
+        .hero h1 {
+            font-size: 2rem;
+            margin: 0;
+            color: #fbbf24;
+            text-shadow: 0 4px 16px rgba(251, 191, 36, 0.25);
+        }
+        .hero p {
+            color: #94a3b8;
+            font-size: 0.92rem;
+            margin: 8px 0 0;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        .stat-pill {
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        .stat-num {
+            display: block;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--gold);
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: rgba(15, 23, 42, 0.85);
+            padding: 5px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            margin-bottom: 18px;
+        }
+        .tab-btn {
+            background: transparent;
+            color: #94a3b8;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            margin: 0;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #be123c, #e11d48);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4);
+        }
+        .tab-btn.active.green-tab {
+            background: linear-gradient(135deg, #047857, #10b981);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            padding: 24px;
+            border-radius: 20px;
+            border: 1px solid rgba(251, 191, 36, 0.18);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.55);
+        }
+        .card h2 {
+            margin: 0 0 6px;
+            font-size: 1.25rem;
+            color: #fff;
+        }
+        .hint {
+            font-size: 0.83rem;
+            color: #94a3b8;
+            line-height: 1.45;
+            display: block;
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            margin-top: 14px;
+            font-size: 0.82rem;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        .input-group {
+            position: relative;
+            margin-top: 6px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 13px 14px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            background: rgba(9, 13, 26, 0.9);
+            color: #f8fafc;
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px var(--gold-glow);
+        }
+
+        .toggle-pin {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 4px;
+            width: auto;
+            margin: 0;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 14px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+        .action-btn:active { transform: scale(0.98); }
+
+        .btn-crimson {
+            background: linear-gradient(135deg, #be123c, #f43f5e);
+            box-shadow: 0 8px 20px rgba(225, 29, 72, 0.35);
+        }
+        .btn-emerald {
+            background: linear-gradient(135deg, #047857, #10b981);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.35);
+        }
+
+        .alert {
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            display: none;
+        }
+        .alert.error {
+            background: rgba(127, 29, 29, 0.45);
+            border: 1px solid #ef4444;
+            color: #fecaca;
+        }
+        .alert.success {
+            background: rgba(6, 78, 59, 0.45);
+            border: 1px solid #10b981;
+            color: #a7f3d0;
+        }
+
+        .gift-reveal {
+            display: none;
+            margin-top: 20px;
+            background: linear-gradient(145deg, #1e1b4b, #0f172a);
+            border: 2px solid var(--gold);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(251, 191, 36, 0.25);
+        }
+        .gift-reveal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(251, 191, 36, 0.25);
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+        .gift-reveal-title {
+            color: var(--gold);
+            font-size: 1.15rem;
+            margin: 0;
+        }
+        .gift-content {
+            white-space: pre-wrap;
+            font-size: 0.98rem;
+            line-height: 1.6;
+            color: #f8fafc;
+            background: rgba(0, 0, 0, 0.35);
+            padding: 14px;
+            border-radius: 10px;
+        }
+
+        details {
+            margin-top: 28px;
+            text-align: center;
+        }
+        summary {
+            color: #64748b;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .admin-panel {
+            text-align: left;
+            margin-top: 12px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            padding: 16px;
+            border-radius: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="snowCanvas"></canvas>
+<canvas id="confettiCanvas"></canvas>
+
+<div class="wrapper">
+    <div class="hero">
+        <span class="badge-top">✨ Official Exchange Gift Portal</span>
+        <h1>Secret Santa Vault</h1>
+        <p>Write your wishes & unlock the secret list of who you drew</p>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-pill">
+            <span class="stat-num" id="totalCount">0</span>
+            <span class="stat-label">Wishlists Posted</span>
+        </div>
+        <div class="stat-pill">
+            <span class="stat-num" id="claimedCount">0</span>
+            <span class="stat-label">Secretly Claimed</span>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" id="tabBtn1" onclick="switchTab(1)">📝 My Wishlist</button>
+        <button class="tab-btn" id="tabBtn2" onclick="switchTab(2)">🎁 Unwrap Recipient</button>
+    </div>
+
+    <div class="card" id="view1">
+        <h2>Post or Update Your Wishlist</h2>
+        <span class="hint">Enter your name and create a Personal PIN so only you can edit your wishes later.</span>
+
+        <label>Your Name</label>
+        <div class="input-group">
+            <input type="text" id="myName" placeholder="e.g., Moises">
+        </div>
+
+        <label>Personal PIN (Keep secret)</label>
+        <div class="input-group">
+            <input type="password" id="myPin" placeholder="e.g., 1234">
+            <button type="button" class="toggle-pin" onclick="togglePass('myPin')">Show</button>
+        </div>
+
+        <label>Your Gift Wishes</label>
+        <div class="input-group">
+            <textarea id="myWishlist" rows="5" placeholder="• Oversized black hoodie (Size L)
+• Insulated tumbler / coffee mug
+• Shopee/Lazada links or gift ideas..."></textarea>
+        </div>
+
+        <button class="action-btn btn-crimson" onclick="saveMyWishlist()">✨ Save My Wishlist</button>
+        <div id="myMsg" class="alert"></div>
+    </div>
+
+    <div class="card" id="view2" style="display: none;">
+        <h2>Unlock Your Recipient's Wishes</h2>
+        <span class="hint">⚠️ Choose <strong>only</strong> the name you drew! Your Gifter PIN permanently locks their list to you.</span>
+
+        <label>Who did you draw?</label>
+        <div class="input-group">
+            <select id="targetSelect">
+                <option value="">-- Loading participants --</option>
+            </select>
+        </div>
+
+        <label>Your Secret Gifter PIN</label>
+        <div class="input-group">
+            <input type="password" id="gifterPin" placeholder="Create a PIN (or re-enter to view again)">
+            <button type="button" class="toggle-pin" onclick="togglePass('gifterPin')">Show</button>
+        </div>
+
+        <button class="action-btn btn-emerald" onclick="viewRecipient()">🔓 Claim & Unwrap Wishlist</button>
+        <div id="recipientErr" class="alert error"></div>
+
+        <div id="giftReveal" class="gift-reveal">
+            <div class="gift-reveal-header">
+                <h3 class="gift-reveal-title" id="revealName">🎁 Wishlist</h3>
+                <span style="font-size: 0.75rem; color: #10b981; font-weight: 700;">🔒 LOCKED TO YOU</span>
+            </div>
+            <div class="gift-content" id="revealText"></div>
+            <p style="font-size: 0.78rem; color: #94a3b8; margin: 10px 0 0;" id="revealStatus"></p>
+        </div>
+    </div>
+
+    <details>
+        <summary>⚙️ Organizer Controls</summary>
+        <div class="admin-panel">
+            <strong style="color: #f8fafc; font-size: 0.9rem;">Reset Accidental Claim</strong>
+            <label>Admin Password</label>
+            <input type="password" id="adminPass" placeholder="Organizer password">
+            <label>Person's Name to Unlock</label>
+            <input type="text" id="resetName" placeholder="Exact name">
+            <button class="action-btn" style="background: #334155; margin-top: 12px;" onclick="resetClaim()">Reset Lock</button>
+            <div id="adminMsg" class="alert"></div>
+        </div>
+    </details>
+</div>
+
+<script>
+    let peopleMap = {};
+
+    function switchTab(tab) {
+        document.getElementById('view1').style.display = tab === 1 ? 'block' : 'none';
+        document.getElementById('view2').style.display = tab === 2 ? 'block' : 'none';
+        document.getElementById('tabBtn1').className = tab === 1 ? 'tab-btn active' : 'tab-btn';
+        document.getElementById('tabBtn2').className = tab === 2 ? 'tab-btn active green-tab' : 'tab-btn';
+    }
+
+    function togglePass(id) {
+        const input = document.getElementById(id);
+        input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    async function loadNames() {
+        const res = await fetch('/api/names');
+        const names = await res.json();
+        const select = document.getElementById('targetSelect');
+        select.innerHTML = '<option value="">-- Select the person you drew --</option>';
+        peopleMap = {};
+        let claimed = 0;
+
+        names.forEach(p => {
+            peopleMap[p.name] = p.isClaimed;
+            if (p.isClaimed) claimed++;
+            const opt = document.createElement('option');
+            opt.value = p.name;
+            opt.textContent = p.name + (p.isClaimed ? '  🔒 (Claimed)' : '  ✨ (Unclaimed)');
+            select.appendChild(opt);
+        });
+
+        document.getElementById('totalCount').textContent = names.length;
+        document.getElementById('claimedCount').textContent = claimed;
+    }
+
+    async function saveMyWishlist() {
+        const name = document.getElementById('myName').value.trim();
+        const pin = document.getElementById('myPin').value.trim();
+        const wishlist = document.getElementById('myWishlist').value.trim();
+        const box = document.getElementById('myMsg');
+
+        if (!name || !pin) return alert("Please enter your Name and Personal PIN.");
+
+        try {
+            const res = await fetch('/api/my-wishlist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, pin, wishlist })
+            });
+
+            const text = await res.text();
+            let data;
+            try { data = JSON.parse(text); } catch(e) { data = { message: text }; }
+
+            box.style.display = 'block';
+            if (res.ok) {
+                box.className = 'alert success';
+                box.textContent = "✅ " + (data.message || "Wishlist saved successfully!");
+                launchConfetti();
+                loadNames();
+            } else {
+                box.className = 'alert error';
+                box.textContent = "❌ " + (data.error || data.message || "Failed to save wishlist.");
+            }
+        } catch (err) {
+            box.style.display = 'block';
+            box.className = 'alert error';
+            box.textContent = "❌ Network error or server offline.";
+        }
+    }
+    async function viewRecipient() {
+        const targetName = document.getElementById('targetSelect').value;
+        const gifterPin = document.getElementById('gifterPin').value.trim();
+        const errBox = document.getElementById('recipientErr');
+        const revealBox = document.getElementById('giftReveal');
+
+        errBox.style.display = 'none';
+        revealBox.style.display = 'none';
+
+        if (!targetName || !gifterPin) return alert("Please choose a name and enter a Gifter PIN.");
+
+        if (!peopleMap[targetName]) {
+            const ok = confirm(`🎁 Confirm Secret Claim\n\nAre you 100% sure you drew ${targetName}?\nClicking OK will permanently lock ${targetName}'s wishlist to your Gifter PIN!`);
+            if (!ok) return;
+        }
+
+        const res = await fetch('/api/view-recipient', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ targetName, gifterPin })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+            document.getElementById('revealName').textContent = `🎁 ${targetName}'s Wishlist`;
+            document.getElementById('revealText').textContent = data.wishlist;
+            document.getElementById('revealStatus').textContent = "🎅 " + data.status;
+            revealBox.style.display = 'block';
+            launchConfetti();
+            loadNames();
+        } else {
+            errBox.style.display = 'block';
+            errBox.textContent = "❌ " + data.error;
+        }
+    }
+
+    async function resetClaim() {
+        const adminPass = document.getElementById('adminPass').value;
+        const targetName = document.getElementById('resetName').value.trim();
+        const box = document.getElementById('adminMsg');
+
+        const res = await fetch('/api/admin/reset-claim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ adminPass, targetName })
+        });
+        const data = await res.json();
+        box.style.display = 'block';
+        box.className = res.ok ? 'alert success' : 'alert error';
+        box.textContent = res.ok ? "✅ " + data.message : "❌ " + data.error;
+        if (res.ok) loadNames();
+    }
+
+    const snowCanvas = document.getElementById('snowCanvas');
+    const sCtx = snowCanvas.getContext('2d');
+    let flakes = [];
+
+    function resizeCanvases() {
+        snowCanvas.width = window.innerWidth;
+        snowCanvas.height = window.innerHeight;
+        confCanvas.width = window.innerWidth;
+        confCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvases);
+
+    for (let i = 0; i < 50; i++) {
+        flakes.push({
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            r: Math.random() * 2 + 0.8,
+            d: Math.random() * 0.7 + 0.3
+        });
+    }
+
+    function drawSnow() {
+        sCtx.clearRect(0, 0, snowCanvas.width, snowCanvas.height);
+        sCtx.fillStyle = "rgba(255, 255, 255, 0.4)";
+        sCtx.beginPath();
+        flakes.forEach(f => {
+            sCtx.moveTo(f.x, f.y);
+            sCtx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+            f.y += f.d;
+            f.x += Math.sin(f.y * 0.01) * 0.3;
+            if (f.y > snowCanvas.height) { f.y = -5; f.x = Math.random() * snowCanvas.width; }
+        });
+        sCtx.fill();
+        requestAnimationFrame(drawSnow);
+    }
+
+    const confCanvas = document.getElementById('confettiCanvas');
+    const cCtx = confCanvas.getContext('2d');
+    let particles = [];
+
+    function launchConfetti() {
+        const colors = ['#fbbf24', '#f43f5e', '#10b981', '#38bdf8', '#ffffff'];
+        for (let i = 0; i < 70; i++) {
+            particles.push({
+                x: confCanvas.width / 2,
+                y: confCanvas.height / 2,
+                vx: (Math.random() - 0.5) * 12,
+                vy: (Math.random() - 0.6) * 12,
+                size: Math.random() * 6 + 4,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                life: 80
+            });
+        }
+    }
+
+    function updateConfetti() {
+        cCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+        particles = particles.filter(p => p.life > 0);
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.3;
+            p.life--;
+            cCtx.fillStyle = p.color;
+            cCtx.fillRect(p.x, p.y, p.size, p.size);
+        });
+        requestAnimationFrame(updateConfetti);
+    }
+
+    resizeCanvases();
+    drawSnow();
+    updateConfetti();
+    loadNames();
+</script>
+</body>
+</html>
